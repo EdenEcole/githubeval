@@ -17,8 +17,8 @@ pipeline {
         }
         stage('Build image nginx') {
             steps {
-                sh 'docker rmi my-nginx:latest'
-                sh 'docker rmi ubuntu:22.04'
+                sh 'docker rmi my-nginx:latest || true'
+                sh 'docker rmi ubuntu:22.04 || true'
                 sh 'docker build -t my-nginx .'
                 sh 'docker image ls'
             }
