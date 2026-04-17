@@ -33,6 +33,7 @@ pipeline {
             steps {
                 sh 'docker run -d --name myapp --hostname myapp -p 80:80 my-nginx'
                 sh 'docker ps'
+                sh 'docker exec myapp service nginx start'
             }
         }
         stage('Copy monsite') {
