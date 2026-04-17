@@ -1,0 +1,18 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('checkout-scm') {
+            steps {
+                cleanWs()
+                git branch: 'main', credentialsId: 'EdenEcole', url: 'https://github.com/EdenEcole/githubeval.git'
+            }
+        }
+
+        stage('Build image nginx') {
+            steps {
+                sh 'docker build -f dockerfile.txt -t mon-nginx .'
+                sh 'docker images mon-nginx'
+            }
+        }
+    }
