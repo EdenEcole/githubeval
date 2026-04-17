@@ -9,14 +9,16 @@ pipeline {
         }
         stage('Install Docker') {
             steps {
-                sh 'sudo apt autoremove docker.io docker-compose -y || true'
                 sh 'sudo apt install docker.io -y || true'
+                sh 'sudo systemctl restart docker.service || true'
                 sh 'sudo chmod 666 /var/run/docker.sock'
-                sh 'sudo systemctl start docker.service || true'
+                sh 'sudo systemctl enable docker.service || true'
             }
         }
         stage('Build image nginx') {
             steps {
+                sh 'sudo systemctl restart docker.service || true'
+                sh 'sudo chmod 666 /var/run/docker.sock'
                 sh 'docker rmi my-nginx:latest || true'
                 sh 'docker rmi ubuntu:22.04 || true'
                 sh 'docker build -t my-nginx .'
@@ -25,12 +27,14 @@ pipeline {
         }
         stage('Clean') {
             steps {
+                sh 'sudo chmod 666 /var/run/docker.sock'
                 sh 'docker stop myapp || true'
                 sh 'docker rm myapp || true'
             }
         }
         stage('Deploy myapp') {
             steps {
+                sh 'sudo chmod 666 /var/run/docker.sock'
                 sh 'docker run -d --name myapp --hostname myapp -p 80:80 my-nginx'
                 sh 'docker ps'
                 sh 'docker exec myapp service nginx start'
@@ -38,9 +42,6 @@ pipeline {
         }
         stage('Copy monsite') {
             steps {
+                sh 'sudo chmod 666 /var/run/docker.sock'
                 sh 'docker cp ./monsite/. myapp:/var/www/html/'
-                sh 'docker exec myapp nginx -s reload || true'
-            }
-        }
-    }
-}
+                sh 'docker exec myapp nginx -s reload || t
