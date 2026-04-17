@@ -11,8 +11,8 @@ pipeline {
 
         stage('Build image nginx') {
             steps {
-                sh 'docker build -f dockerfile.txt -t mon-nginx .'
-                sh 'docker images mon-nginx'
+                sh 'docker build -f dockerfile.txt -t my-nginx .'
+                sh 'docker images my-nginx'
             }
         }
     }
