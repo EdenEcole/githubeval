@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                cleanWs()
+                git branch: 'main', credentialsId: 'EdenEcole', url: 'https://github.com/EdenEcole/githubeval.git'
+            }
+        }
+        stage('Install Docker') {
+            steps {
+                sh 'sudo apt autoremove docker.io docker-compose -y || true'
+                sh 'sudo apt update'
+                sh 'sudo apt install apt-transport-https ca-certificates curl software-properties-common -y'
+                sh 'sudo apt install docker.io -y'
+                sh 'sudo chmod 666 /var/run/docker.sock'
+                sh 'sudo usermod -aG docker jenkins'
+                sh 'sudo systemctl start docker.service'
+            }
+        }
+        stage('Build image nginx') {
+            steps {
+                sh 'docker build -t my-nginx .'
+                sh 'docker image ls'
+            }
+        }
+        stage('Clean') {
+            steps {
+                sh 'docker stop myapp || true'
+                sh 'docker rm myapp || true'
+                sh 'docker container prune -f || true'
+            }
+        }
+        stage('Deploy myapp') {
+            steps {
+                sh 'docker network create -d macvlan --subnet=192.168.10.0/24 --gateway=192.168.10.254 -o parent=ens33 macvlan192 || true'
+                sh 'docker run -d --name myapp --hostname myapp --network macvlan192 --ip 192.168.10.20 my-nginx'
+                sh 'docker ps'
+                sh 'docker exec myapp ifconfig'
+            }
+        }
+        stage('Copy monsite') {
+            steps {
+                sh 'docker exec myapp mkdir -p /var/www/html/monsite'
+                sh 'docker cp ./monsite/. myapp:/var/www/html/monsite/'
+                sh 'docker exec myapp nginx -s reload || true'
+            }
+        }
+    }
+}
